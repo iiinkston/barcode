@@ -1,7 +1,7 @@
 var barcode = (function () {
     var handler = null;
     var isScanning = false;
-    var isInitialized = false; // 确保 Quagga 只初始化一次
+    var isInitialized = false;
 
     return {
         setHandler: function (callback) {
@@ -11,13 +11,14 @@ var barcode = (function () {
         init: function () {
             console.log("📌 Initializing Barcode Scanner...");
 
-            if (isInitialized) {
-                console.log("✅ Quagga is already initialized. Skipping...");
+            if (typeof Quagga === "undefined") {
+                console.error("❌ QuaggaJS is not available!");
                 return;
             }
 
-            if (typeof Quagga === "undefined") {
-                console.error("❌ QuaggaJS is not available!");
+            if (isInitialized) {
+                console.log("✅ Quagga is already initialized. Restarting...");
+                barcode.start();  // 确保 `start()` 被正确调用
                 return;
             }
 
@@ -52,7 +53,7 @@ var barcode = (function () {
 
                 console.log("📢 QuaggaJS Scanner Ready!");
                 isInitialized = true;
-                barcode.start(); // 只有初始化完成后才启动
+                barcode.start();
             });
 
             // 监听条码检测
@@ -61,11 +62,10 @@ var barcode = (function () {
                     console.log("🎯 Real Barcode Detected:", data.codeResult.code);
                     handler(data.codeResult.code);
                     barcode.stop(); // 识别到条码后暂停扫描
-                    setTimeout(() => barcode.start(), 3000); // 3 秒后重新启动
                 }
             });
 
-            // 监听条码识别过程，优化检测
+            // 监听条码识别过程
             Quagga.onProcessed(function (result) {
                 if (result && result.boxes && result.boxes.length > 0) {
                     isScanning = true;
@@ -95,6 +95,12 @@ var barcode = (function () {
             console.log("⏹️ Stopping Barcode Scanner...");
             isScanning = false;
             Quagga.stop();
+
+            setTimeout(() => {
+                console.log("🔄 Re-initializing Quagga Scanner...");
+                isInitialized = false;
+                barcode.init();  // **完全重新初始化 Quagga**
+            }, 3000);  // **3 秒后重新初始化**
         }
     };
 })();

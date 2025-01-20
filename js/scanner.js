@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         videoElement.srcObject = stream;
         console.log("✅ Camera Access Granted");
 
-        // 确保 Quagga 初始化完成后再启动
         setTimeout(() => {
             console.log("📢 Starting Barcode Scanner...");
             barcode.init(); // 启动 QuaggaJS
